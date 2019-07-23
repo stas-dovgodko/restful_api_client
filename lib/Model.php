@@ -6,7 +6,10 @@ namespace JsonAPI;
 
 abstract class Model
 {
-    private $map = array();
+    private $map = [];
+
+    protected $exposed = null;
+    protected $ignored = [];
 
     /**
      * Magic Get Method
@@ -63,11 +66,15 @@ abstract class Model
      *
      * @return array
      */
-    public function toArray()
+    public function toArray(array $keys = null)
     {
-        $_convertToArray = function($params) use(&$_convertToArray) {
+        $_convertToArray = function($params) use(&$_convertToArray, $keys) {
             $ret = [];
             foreach ($params as $k => $v) {
+                if (($keys !== null) && !in_array($k, $keys)) continue;
+                if (($this->exposed !== null) && !in_array($k, $this->exposed)) continue;
+                if (in_array($k, $this->ignored)) continue;
+
                 if ($v instanceof Model) {
                     $ret[$k] = $v->toArray();
                 } elseif (is_array($v)) {

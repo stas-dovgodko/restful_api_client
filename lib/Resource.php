@@ -9,7 +9,7 @@ use JsonAPI\Model\Stub;
 use Psr\Http\Message;
 
 trait Resource {
-    
+
     /**
      * @var Client\Adapter|null
      */
@@ -86,11 +86,11 @@ trait Resource {
      * @param $action
      * @param $method
      * @param array $data
-     * @param string $modelClass
+     * @param string $modelClassOrCallback
      * @return Model
      * @throws Client\Exception client exception
      */
-    protected function request($action, $method, array $data, $modelClass = Stub::class) : Model
+    protected function request($action, $method, array $data, $modelClassOrCallback = Stub::class) : Model
     {
         $adapter = $this->getAdapter();
 
@@ -113,6 +113,7 @@ trait Resource {
             throw new Client\Exception(($response instanceof Response) ? $response->getReasonPhrase() : 'Wrong HTTP Code - '.$response->getStatusCode(), $request);
         }
 
-        return $modelClass::FromArray($data);
+        if (is_callable($modelClassOrCallback)) return $modelClassOrCallback($data);
+        else return $modelClassOrCallback::FromArray($data);
     }
 }
