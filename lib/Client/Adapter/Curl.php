@@ -12,6 +12,16 @@ class Curl extends Adapter
 
     protected $ch;
 
+    protected $options = [];
+
+    public function setOptions(array $options)
+    {
+        foreach ($options as $k => $v) $this->options[$k] = $v;
+        $this->curlReset();
+
+        return $this;
+    }
+
     /**
      * @param Message\RequestInterface $request
      * @param null $bodyHandler
@@ -21,7 +31,7 @@ class Curl extends Adapter
     protected function request(Message\RequestInterface $request, $bodyHandler = null, $headersHandler = null)
     {
         $uri = $request->getUri(); $body = $request->getBody();
-        $options = [];
+        $options = $this->options;
         // detect version
         switch ($ver = $request->getProtocolVersion()) {
             case '1.0':
@@ -49,6 +59,7 @@ class Curl extends Adapter
         }
 
         $options[CURLOPT_URL] = (string)$uri;
+
         if ($user_info = $uri->getUserInfo()) {
             $options[CURLOPT_USERPWD] = $user_info;
         }
@@ -105,7 +116,7 @@ class Curl extends Adapter
         $options[CURLOPT_HTTPHEADER] = [];
         foreach ($request->getHeaders() as $name => $values) {
             if (is_scalar($values)) $values = [$values];
-            
+
             $header = strtoupper($name);
 
             if ($this->debug && $this->logger) {
@@ -135,7 +146,7 @@ class Curl extends Adapter
 
         if (is_callable($headersHandler)) {
             $options[CURLOPT_HEADERFUNCTION] = function ($ch, $data) use($headersHandler) {
-                
+
                 if ($this->debug && $this->logger) {
                     $this->logger->debug('Response header: ' . $data);
                 }
