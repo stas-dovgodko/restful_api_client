@@ -14,6 +14,15 @@ class Curl extends Adapter
 
     protected $options = [];
 
+    protected $postMultipart = true;
+
+    public function setMultipart($state = true) : self
+    {
+        $this->postMultipart = $state;
+
+        return $this;
+    }
+
     public function setOptions(array $options)
     {
         foreach ($options as $k => $v) $this->options[$k] = $v;
@@ -100,6 +109,10 @@ class Curl extends Adapter
                     $payload = (string)$body;
                     $options[CURLOPT_POSTFIELDS] = $payload;
 
+                    if ($request_method === 'POST') {
+                        $options[CURLOPT_POST] = true;
+                    }
+
                     if ($this->debug && $this->logger) {
                         $this->logger->debug('Payload: '.$payload);
                     }
@@ -113,7 +126,7 @@ class Curl extends Adapter
             $options[CURLOPT_CUSTOMREQUEST] = $request->getMethod();
         }
 
-        $options[CURLOPT_HTTPHEADER] = [];
+        if (!array_key_exists(CURLOPT_HTTPHEADER, $options)) $options[CURLOPT_HTTPHEADER] = [];
         foreach ($request->getHeaders() as $name => $values) {
             if (is_scalar($values)) $values = [$values];
 
@@ -166,6 +179,7 @@ class Curl extends Adapter
         }
 
         $ch = curl_copy_handle($this->curlInit()); // local options handler
+
         // Setup the cURL request
         curl_setopt_array($ch, $options);
         // Execute the request

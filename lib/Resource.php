@@ -23,7 +23,7 @@ trait Resource {
     public function setEndpoint($endpoint)
     {
         $this->endpoint = $endpoint;
-        
+
         return $this;
     }
 
@@ -42,7 +42,7 @@ trait Resource {
     public function setAdapter(Client\Adapter $adapter) : self
     {
         $this->adapter = $adapter;
-        
+
         return $this;
     }
 
@@ -61,17 +61,25 @@ trait Resource {
      * @param array $hashmap
      * @return Message\RequestInterface
      */
-    protected function prepareRequest($action, $method, array $hashmap) : Message\RequestInterface
+    protected function prepareRequest($action, $method, $hashmap) : Message\RequestInterface
     {
         $url = $this->getEndpointCall($action);
         if ($method === 'GET') {
             $url .= '?'.http_build_query($hashmap, null, '&');
             $payload = '';
-        } else {
+        } elseif (!is_string($hashmap)) {
             $payload = http_build_query($hashmap, null, '&');
+        } else {
+            $payload = $hashmap;
         }
 
-        return new Request($method, $url, [], $payload);
+        $request = new Request($method, $url, [], $payload);
+
+        if (is_string($hashmap)) {
+
+        }
+
+        return $request;
     }
 
     /**
@@ -90,7 +98,7 @@ trait Resource {
      * @return Model
      * @throws Client\Exception client exception
      */
-    protected function request($action, $method, array $data, $modelClassOrCallback = Stub::class) : Model
+    protected function request($action, $method, $data, $modelClassOrCallback = Stub::class) : Model
     {
         $adapter = $this->getAdapter();
 
